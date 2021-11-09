@@ -1,23 +1,13 @@
 # devops-netology
-Фкирдымов Тимур комментарий к заданию 2.1. Системы контроля версий.
+Фкирдымов Тимур комментарий к заданию 2.2. GIT
 
-**/.terraform/*  - игнорирование всего в каталогах terraform на всех уровнях
+Здравствуйте, ссылки
 
-*.tfstate - игнорировать все файлы с расширением .tfstate
+https://github.com/TimurFk/devops-netology
 
-*.tfstate.* - игнорировать файлы содержащие в название tfstate
+https://gitlab.com/TimurFk/devops-netology
 
-crash.log - игнорировать лог-файлы crash
+https://bitbucket.org/timurfk/devops-netology 
 
-*.tfvars - игнорировать все файлы с расширением .tfvars
-
-override.tf
-override.tf.json  - игнорировать эти два файла в директории и поддиректориях
-
-*_override.tf
-*_override.tf.json - игнорировать файлы, имена которых содержат указанные названия
-
-.terraformrc - игнорировать файлы с этим расширением
-terraform.rc - игнорировать данный файл
 
 
