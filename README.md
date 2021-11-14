@@ -1,5 +1,7 @@
 # devops-netology
-Фкирдымов Тимур комментарий к заданию 2.3 GIT
+Фкирдымов Тимур комментарий к заданию 2.4 
+
+Здравствуйте, домашнее задание на проверку.
 
 1)Найдите полный хеш и комментарий коммита, хеш которого начинается на aefea.  
 Выполнил - git show aefea
@@ -41,9 +43,9 @@ c0b17610965450a89598da491ce9b6b5cbd6393f prevent log output during init
 
 7)Кто автор функции synchronizedWriters?
 Выполняю git log -S 'func synchronizedWriters' , вижу 2 коммита – выбираю более ранний.
-              commit 5ac311e2a91e381e2f52234668b49ba670aa0fe5
-              Author: Martin Atkins <mart@degeneration.co.uk>
-              Date:   Wed May 3 16:25:41 2017 -0700
+commit 5ac311e2a91e381e2f52234668b49ba670aa0fe5
+Author: Martin Atkins <mart@degeneration.co.uk>
+Date:   Wed May 3 16:25:41 2017 -0700
 
 
 
