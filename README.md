@@ -61,9 +61,9 @@ Hello
 Bye  
 $ ls -l && cat test123 -z 4>&1 1>&2 2>&4 | wc –l      
 #ls – рабочая команда cat – выдаст ошибку.   
-# 4>&1  пром. дескриптор перенаправили в stdout  
-# 1>&2   stdout в stderr  
-# 2>&4  stderr в пром. дескриптор   
+#4>&1  пром. дескриптор перенаправили в stdout  
+#1>&2   stdout в stderr  
+#2>&4  stderr в пром. дескриптор   
 drwxrwxr-x 2 vagrant vagrant 4096 Nov 29 09:51 test  
 -rw-rw-r-- 1 vagrant vagrant   22 Nov 29 09:42 test_file  
 2  
