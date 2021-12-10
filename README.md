@@ -7,13 +7,15 @@
 
 Скачал, распаковал, установил.  
 Сделал init:  
+$ sudo nano /etc/default/node_exporter  
+OPTIONS = ...  
 $ sudo nano /etc/systemd/system/node_exporter.service  
 [Unit]  
 Description=Node Exporter Service  
-_Доработка_
+
 [Service]  
-EnvironmentFile=-/etc/default/node_exporter  #в этом файле указываем переменную  
-ExecStart=/usr/local/bin/node_exporter -a –n __если правильно понял, вот здесь указываем опции, которые будут передаваться в службу, в моем случае –a и -n_  
+ExecStart=/usr/local/bin/node_exporter $OPTIONS  
+EnvironmentFile=/etc/default/node_exporter  
 Restart=on  
 
 [Install]  
