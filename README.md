@@ -9,11 +9,11 @@
 Сделал init:  
 $ sudo nano /etc/systemd/system/node_exporter.service  
 [Unit]  
-Description=Node Exporter Service
-#Доработка
+Description=Node Exporter Service  
+_Доработка_
 [Service]  
 EnvironmentFile=-/etc/default/node_exporter  #в этом файле указываем переменную  
-ExecStart=/usr/local/bin/node_exporter -a –n <span style="color: green">#если правильно понял, вот здесь указываем опции, которые будут передаваться в службу, в моем случае –a и -n </span>  
+ExecStart=/usr/local/bin/node_exporter -a –n __если правильно понял, вот здесь указываем опции, которые будут передаваться в службу, в моем случае –a и -n_  
 Restart=on  
 
 [Install]  
