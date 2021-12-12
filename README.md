@@ -36,7 +36,7 @@ Device     Boot   Start     End Sectors  Size Id Type
 /dev/sdb1          2048 4196351 4194304    2G 83 Linux  
 /dev/sdb2       4196352 5242879 1046528  511M 83 Linux
 
-***5. Используя sfdisk, перенесите данную таблицу разделов на второй диск.***
+***5. Используя sfdisk, перенесите данную таблицу разделов на второй диск.***  
 Выполнил:  
 $ sudo sfdisk -d /dev/sdb > part_table  
 $ sudo sfdisk /dev/sdc < part_table  
@@ -50,7 +50,7 @@ sdc                    8:32   0  2.5G  0 disk
 ├─sdc1                 8:33   0    2G  0 part  
 └─sdc2                 8:34   0  511M  0 part
 
-***6. Соберите mdadm RAID1 на паре разделов 2 Гб.***
+***6. Соберите mdadm RAID1 на паре разделов 2 Гб.***  
 Выполнил:  
 $ sudo mdadm --create --verbose /dev/md0 --level=1 --raid-devices=2 /dev/sdb1 /dev/sdc1  
 $ lsblk  
