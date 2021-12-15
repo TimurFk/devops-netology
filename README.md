@@ -22,8 +22,7 @@ netstat –i
 Пакет используется lldpd.  
 Команда: lldpctl или lldpcli show neighbors  
 $ lldpctl  
-LLDP neighbors:  
--------------------------------------------------------------------------------  
+LLDP neighbors:   
 Interface:    eth0, via: LLDP, RID: 1, Time: 0 day, 00:04:04  
   Chassis:  
     ChassisID:    mac b8:d4:e7:39:6b:3c  
