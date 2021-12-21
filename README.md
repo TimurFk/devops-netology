@@ -35,24 +35,24 @@ rx pathid: 0, tx pathid: 0x0
 
 ***2. Создайте dummy0 интерфейс в Ubuntu. Добавьте несколько статических маршрутов. Проверьте таблицу маршрутизации.***
 
-$ sudo -i  
-# echo "dummy" >> /etc/modules  
-# echo "options dummy numdummies=1" > /etc/modprobe.d/dummy.conf  
-# nano /etc/network/interfaces  
+~$ sudo -i  
+~# echo "dummy" >> /etc/modules  
+~# echo "options dummy numdummies=1" > /etc/modprobe.d/dummy.conf  
+~# nano /etc/network/interfaces  
 source-directory /etc/network/interfaces.d  
 auto dummy0  
 iface dummy0 inet static  
 address 192.168.18.2/24  
 pre-up ip link add dummy0 type dummy  
 post-down ip link del dummy0  
-# systemctl restart networking.service  
-# ip -c -br address | grep dummy0  
+~# systemctl restart networking.service  
+~# ip -c -br address | grep dummy0  
 dummy0           UNKNOWN        192.168.18.2/24 fe80::8852:90ff:fe0e:8159/64  
-# ip route add 192.168.123.0/24 dev dummy0               # Вариант 1, по сет. интерфейсу до перезагрузки   
+~# ip route add 192.168.123.0/24 dev dummy0               # Вариант 1, по сет. интерфейсу до перезагрузки   
 $ sudo nano /etc/network/interfaces		         # Вариант 2, по адресу, с сохранением после ребута  
-#static route  
+ #static route  
 up ip ro add 192.168.235.0/25 via 192.168.18.2  
-$ ip route show  
+~$ ip route show  
 ip route show  
 default via 192.168.55.1 dev eth0 proto dhcp src 192.168.55.52 metric 100  
 192.168.55.0/24 dev eth0 proto kernel scope link src 192.168.55.52  
