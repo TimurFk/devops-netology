@@ -1,120 +1,85 @@
 # devops-netology
 
-Здравствуйте, Фкирдымов Тимур комментарий к заданию 3.7
+Здравствуйте, Фкирдымов Тимур комментарий к заданию 3.8
 
 
-***1. Проверьте список доступных сетевых интерфейсов на вашем компьютере. Какие команды есть для этого в Linux и в Windows?***
+***1. Подключитесь к публичному маршрутизатору в интернет. Найдите маршрут к вашему публичному IP***  
+***telnet route-views.routeviews.org***  
+***Username: rviews***  
+***show ip route x.x.x.x/32***  
+***show bgp x.x.x.x/32***
 
-Windows - ipconfig /all  
-Linux:  
-$ ip -c -br link  
-lo               UNKNOWN        00:00:00:00:00:00 <LOOPBACK,UP,LOWER_UP>  
-eth0             UP             08:00:27:73:60:cf <BROADCAST,MULTICAST,UP,LOWER_UP>
+Routing entry for 5.39.160.0/21  
+Known via "bgp 6447", distance 20, metric 0  
+Tag 6939, type external  
+Last update from 64.71.137.241 23:10:58 ago  
+Routing Descriptor Blocks:  
+* 64.71.137.241, from 64.71.137.241, 23:10:58 ago  
+Route metric is 0, traffic share count is 1  
+AS Hops 3  
+Route tag 6939  
+MPLS label: none
 
-Альтернативные команды:
-ifconfig –a  
-ls /sys/class/net   
-netstat –i
+BGP routing table entry for 5.39.160.0/21, version 1838928703  
+Paths: (23 available, best #22, table default)  
+…  
+Refresh Epoch 1  
+6939 8331 58157  
+64.71.137.241 from 64.71.137.241 (216.218.252.164)  
+Origin IGP, localpref 100, valid, external, best  
+unknown transitive attribute: flag 0xE0 type 0x20 length 0xC  
+value 0000 21B7 0000 0777 0000 21B7  
+path 7FE18BAD1DE8 RPKI State not found  
+rx pathid: 0, tx pathid: 0x0
+	
 
-***2. Какой протокол используется для распознавания соседа по сетевому интерфейсу? Какой пакет и команды есть в Linux для этого?***
+***2. Создайте dummy0 интерфейс в Ubuntu. Добавьте несколько статических маршрутов. Проверьте таблицу маршрутизации.***
 
-Используется протокол LLDP.  
-Пакет используется lldpd.  
-Команда: lldpctl или lldpcli show neighbors  
-$ lldpctl  
-LLDP neighbors:   
-Interface:    eth0, via: LLDP, RID: 1, Time: 0 day, 00:04:04  
-  Chassis:  
-    ChassisID:    mac b8:d4:e7:39:6b:3c  
-    SysDescr:     HPE OfficeConnect Switch 1920S 48G 4SFP PPoE+ (370W) JL386A, PD.02.16, Linux 3.6.5-375bd0e8, U-Boot 2012.10-00118-g3773021 (Oct 11 2016 - 15:39:54)  
-    MgmtIP:       192.168.55.31  
-    Capability:   Bridge, on  
-    Capability:   Router, offPort:  
-    PortID:       mac b8:d4:e7:39:6b:3e  
-    PortDescr:    46  
-    TTL:          120
+$ sudo -i  
+# echo "dummy" >> /etc/modules  
+# echo "options dummy numdummies=1" > /etc/modprobe.d/dummy.conf  
+# nano /etc/network/interfaces  
+source-directory /etc/network/interfaces.d  
+auto dummy0  
+iface dummy0 inet static  
+address 192.168.18.2/24  
+pre-up ip link add dummy0 type dummy  
+post-down ip link del dummy0  
+# systemctl restart networking.service  
+# ip -c -br address | grep dummy0  
+dummy0           UNKNOWN        192.168.18.2/24 fe80::8852:90ff:fe0e:8159/64  
+# ip route add 192.168.123.0/24 dev dummy0               # Вариант 1, по сет. интерфейсу до перезагрузки   
+$ sudo nano /etc/network/interfaces		         # Вариант 2, по адресу, с сохранением после ребута  
+#static route  
+up ip ro add 192.168.235.0/25 via 192.168.18.2  
+$ ip route show  
+ip route show  
+default via 192.168.55.1 dev eth0 proto dhcp src 192.168.55.52 metric 100  
+192.168.55.0/24 dev eth0 proto kernel scope link src 192.168.55.52  
+192.168.55.1 dev eth0 proto dhcp scope link src 192.168.55.52 metric 100  
+192.168.18.0/24 dev dummy0 proto kernel scope link src 192.168.18.2  
+192.168.235.0/25 via 192.168.18.2 dev dummy0
 
-***3. Какая технология используется для разделения L2 коммутатора на несколько виртуальных сетей? Какой пакет и команды есть в Linux для этого? Приведите пример конфига.***
+***3. Проверьте открытые TCP порты в Ubuntu, какие протоколы и приложения используют эти порты? Приведите несколько примеров.***
 
-Используется VLAN.  
-Пакет называется также – vlan  
-Команды:  
-- редактирование файла /etc/network/interfaces  
-- добавление через vconfig (после перезагрузки будет удален)  
-- добавление через команду ip (после перезагрузки будет удален)
+$ ss -tn  
+ESTAB            0                   64                 192.168.55.52:22              192.168.55.93:59821
 
-Вариант через редактирование файла:  
-$ nano /etc/network/interfaces  
-auto vlan123                                    # автоматически запускаем интерфейс при запуске службы  
-iface vlan123 inet static			# название интерфейса  
-address 192.168.4.150  
-netmask 255.255.255.0  
-vlan-raw-device eth0			        # на каком физическом интерфейсе создаем VLAN  
-$ systemctl restart network
+TCP 22 порт(по умолчанию) использует протокол SSH, приложения – putty, terminal и т.д.
 
-***4. Какие типы агрегации интерфейсов есть в Linux? Какие опции есть для балансировки нагрузки? Приведите пример конфига.***
+***4. Проверьте используемые UDP сокеты в Ubuntu, какие протоколы и приложения используют эти порты?***
 
-В Linux объединение реализуется с помощью утилиты ifenslave, а работает с помощью модуля ядра "bonding".  
-Типы агрегации:  
-mode=0 (balance-rr) – пакеты по очереди направляются на сетевые порты объединенного интерфейса.  
-mode=1 (active-backup) – активен основной интерфейс, остальные включаются только в случае отказа.  
-mode=2 (balance-xor) - объединенный интерфейс определяет, через какую сетевую карту отправить пакеты, в зависимости от MAC-адресов источника и получателя.  
-mode=3 (broadcast) - широковещательный режим, все пакеты отправляются через каждый интерфейс.  
-mode=4 (802.3ad) – специфичный вариант. Реализует стандарты объединения каналов IEEE и обеспечивает как увеличение пропускной способности, так и отказоустойчивость.  
-mode=5 (balance-tlb) - распределение нагрузки при передаче. Входящий трафик обрабатывается в обычном режиме, а при передаче интерфейс определяется на основе данных о загруженности.  
-mode=6 (balance-alb) - адаптивное распределение нагрузки. Аналогично предыдущему режиму, но с возможностью балансировать также входящую нагрузку.
+Netid             State              Recv-Q             Send-Q                              Local Address:Port                           Peer Address:Port             Process  
+udp    UNCONN    0      0        127.0.0.53%lo:53           0.0.0.0:*              users:(("systemd-resolve",pid=567,fd=12))  
+udp    UNCONN    0      0        192.168.55.52%eth0:68    0.0.0.0:*                 users:(("systemd-network",pid=384,fd=19))  
+udp    UNCONN    0      0        0.0.0.0:111                  0.0.0.0:*  users:(("rpcbind",pid=565,fd=5),("systemd",pid=1,fd=36))  
+udp     UNCONN   0      0        [::]:111                         [::]:*          users:(("rpcbind",pid=565,fd=7),("systemd",pid=1,fd=38))
 
-Можно реализовать через команду, но работать будет до перезагрузки:  
-$ sudo ip link add bond0 type bond mode balance-rr  
-$ sudo ip link set eth0 master bond0  
-$ sudo ip link set eth1 master bond0
+udp 53 порт – использует DNS, служба DNS  
+udp 68 порт – используется службой DHCP
 
-Чтобы работало и после перезагрузки, редактируем файл /etc/network/interfaces  
-$ sudo nano /etc/network/interfaces  
-	auto bond0				#автоматически запускаем интерфейс при запуске службы    
-	iface bond0 inet static			# название интерфейса  
- 	address 192.168.4.150			# ip адрес интерфейса  
-        netmask 255.255.255.0    		# маска интерфейса  
- 	gateway 192.168.4.1			# шлюз интерфейса  
- 	dns-nameservers 192.168.4.1 		# DNS сервер  
- 	slaves eth0 eth1			# Название физических интерфейсов, которые объединяем  
-       	bond_mode 0 #или словам balance-rr	# Режим работы объединенного интерфейса  
-        bond-miimon 100				# интервал проверки канала в миллисекундах  
-        bond_downdelay 200			# Задержка перед установкой соединения в миллисекундах  
-        bound_updelay 200			# Задержка перед обрывом соединения в миллисекундах
+***5. Используя diagrams.net, создайте L3 диаграмму вашей домашней сети или любой другой сети, с которой вы работали.***
 
-$ sudo systemctl restart networking.service   #перезапускаем сетевую службу
+В моем варианте диаграмма уровня L3 получится совсем простой, поэтому сделал в более красивом виде.  
+https://disk.yandex.ru/i/zXEed6epKcZDiA
 
-***5. Сколько IP адресов в сети с маской /29 ? Сколько /29 подсетей можно получить из сети с маской /24. Приведите несколько примеров /29 подсетей внутри сети 10.10.10.0/24.***
-
-В сети с маской /29 – всего 8 IP - адресов, доступных для хостов 6.  
-Маска сети /29 = 255.255.255.248.   248 = 11111000 = 2^5 = 32.  
-Из сети с маской /24 можно получить – 32 подсети с маской /29.  
-Примеры:  
-10.10.10.0-10.10.10.7  (10.10.10.0 адрес подсети, 10.10.10.7 широковещательный адрес, 10.10.10.1-10.10.10.6 можно использовать под адреса узлов)  
-10.10.10.8-10.10.10.15  
-10.10.10.16-10.10.10.23  
-…..  
-10.10.10.248-10.10.10.255
-
-***6. Задача: вас попросили организовать стык между 2-мя организациями. Диапазоны 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16 уже заняты. Из какой подсети допустимо взять частные IP адреса? Маску выберите из расчета максимум 40-50 хостов внутри подсети.***  
-Может взять адреса из 100.64.0.0 подсети. Например -  100.64.1.0/26 , максимум 62 узла.
-
-***7. Как проверить ARP таблицу в Linux, Windows? Как очистить ARP кеш полностью? Как из ARP таблицы удалить только один нужный IP?***  
-
-Проверить можно командой arp –a  
-Очистить полностью командой - sudo ip neigh flush all  
-Удалить нужный адрес командой - arp –d  
-Пример:  
-$ arp –a  
-(192.168.55.27) at a0:ce:c8:da:2b:46 [ether] on eth0  
-_gateway (192.168.55.1) at 00:15:5d:a2:d1:08 [ether] on eth0  
-? (192.168.55.199) at b4:2e:99:4c:3d:79 [ether] on eth0  
-? (192.168.55.46) at 00:e0:4c:38:b5:45 [ether] on eth0  
-? (192.168.55.7) at 00:15:5d:a2:d1:06 [ether] on eth0  
-$ sudo arp –d 192.168.55.7  
-(192.168.55.27) at a0:ce:c8:da:2b:46 [ether] on eth0  
-_gateway (192.168.55.1) at 00:15:5d:a2:d1:08 [ether] on eth0  
-? (192.168.55.199) at b4:2e:99:4c:3d:79 [ether] on eth0  
-? (192.168.55.46) at 00:e0:4c:38:b5:45 [ether] on eth0  
-$ sudo ip neigh flush all
