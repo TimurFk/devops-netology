@@ -24,14 +24,14 @@ $ sudo nano /etc/apache2/sites-available/192.168.39.35.conf
 </VirtualHost>  
 $ sudo mkdir /var/www/192.168.39.35  
 $ sudo nano /var/www/192.168.39.35/index.html  
-<h1>Rabotaet!!!</h1>  
+#<h1>Rabotaet!!!</h1>  
 $ sudo a2ensite 192.168.39.35.conf  
 $ sudo systemctl reload apache2  
 $ sudo apache2ctl configtest  
 Syntax OK  
 Проверяю в браузере https://192.168.39.35  
 https://disk.yandex.ru/i/_Mj3sMnHgYfomQ  
-https://disk.yandex.ru/i/-waGOqkuyqiF_A 
+https://disk.yandex.ru/i/-waGOqkuyqiF_A  
 
 ***4.	 Проверьте на TLS уязвимости произвольный сайт в интернете (кроме сайтов МВД, ФСБ, МинОбр, НацБанк, РосКосмос, РосАтом, РосНАНО и любых госкомпаний, объектов КИИ, ВПК ... и тому подобное).***  
 $ git clone --depth 1 https://github.com/drwetter/testssl.sh.git  
