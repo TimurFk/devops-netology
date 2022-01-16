@@ -1,13 +1,13 @@
 # devops-netology
 Здравствуйте, Фкирдымов Тимур комментарий к заданию 3.9
 
-###1.	Установите Bitwarden плагин для браузера. Зарегистрируйтесь и сохраните несколько паролей.###  
+***1.	Установите Bitwarden плагин для браузера. Зарегистрируйтесь и сохраните несколько паролей.***  
 https://disk.yandex.ru/i/ufedPqnSIoXMkQ 
 
-###2.	Установите Google authenticator на мобильный телефон. Настройте вход в Bitwarden аккаунт через Google authenticator OTP.###  
+***2.	Установите Google authenticator на мобильный телефон. Настройте вход в Bitwarden аккаунт через Google authenticator OTP.***  
 https://disk.yandex.ru/i/HetCYOSMKdCvTg
 
-###3.	Установите apache2, сгенерируйте самоподписанный сертификат, настройте тестовый сайт для работы по HTTPS.###  
+***3.	Установите apache2, сгенерируйте самоподписанный сертификат, настройте тестовый сайт для работы по HTTPS.***  
 $ sudo apt update  
 $ sudo apt install apache2  
 $ sudo a2enmod ssl  
@@ -33,7 +33,7 @@ Syntax OK
 https://disk.yandex.ru/i/_Mj3sMnHgYfomQ  
 https://disk.yandex.ru/i/-waGOqkuyqiF_A 
 
-###4.	 Проверьте на TLS уязвимости произвольный сайт в интернете (кроме сайтов МВД, ФСБ, МинОбр, НацБанк, РосКосмос, РосАтом, РосНАНО и любых госкомпаний, объектов КИИ, ВПК ... и тому подобное).###  
+***4.	 Проверьте на TLS уязвимости произвольный сайт в интернете (кроме сайтов МВД, ФСБ, МинОбр, НацБанк, РосКосмос, РосАтом, РосНАНО и любых госкомпаний, объектов КИИ, ВПК ... и тому подобное).***  
 $ git clone --depth 1 https://github.com/drwetter/testssl.sh.git  
 $ cd testssl.sh  
 ~/testssl.sh$ ./testssl.sh -p --parallel --sneaky https://www.xxpm.ru/
@@ -41,7 +41,7 @@ $ cd testssl.sh
 Проверял рабочий сайт, поэтому частично замазал  
 https://disk.yandex.ru/i/ICj0hHqb5ub9WA 
 
-###5.	Установите на Ubuntu ssh сервер, сгенерируйте новый приватный ключ. Скопируйте свой публичный ключ на другой сервер. Подключитесь к серверу по SSH-ключу.###  
+***5.	Установите на Ubuntu ssh сервер, сгенерируйте новый приватный ключ. Скопируйте свой публичный ключ на другой сервер. Подключитесь к серверу по SSH-ключу.***  
 $ hostname  
 vagrant  
 $ sudo apt install openssh-server  
@@ -56,7 +56,7 @@ Now try logging into the machine, with:   "ssh 'vagrant@192.168.39.34'"
 $ ssh vagrant@192.168.39.34  					
 Подключение прошло успешно - https://disk.yandex.ru/i/frwizDi6aLlaLQ 
 
-###6.	Переименуйте файлы ключей из задания 5. Настройте файл конфигурации SSH клиента, так чтобы вход на удаленный сервер осуществлялся по имени сервера.###  
+***6.	Переименуйте файлы ключей из задания 5. Настройте файл конфигурации SSH клиента, так чтобы вход на удаленный сервер осуществлялся по имени сервера.***  
 ~$ cd /home/vagrant/.ssh  
 ~/.ssh$ ls  
 authorized_keys  id_rsa  id_rsa.pub  known_hosts  
@@ -70,7 +70,7 @@ IdentityFile ~/.ssh/second_rsa
 $ ssh vagrant@vagrant2  
 Подключение прошло успешно - https://disk.yandex.ru/i/dCKK9r_kN3BQbg
 
-###7.	Соберите дамп трафика утилитой tcpdump в формате pcap, 100 пакетов. Откройте файл pcap в Wireshark.###
+***7.	Соберите дамп трафика утилитой tcpdump в формате pcap, 100 пакетов. Откройте файл pcap в Wireshark.***  
 $ tcpdump -i eth0 -c 100 -w 1601.pcap  
 tcpdump: listening on eth0, link-type EN10MB (Ethernet), capture size 262144 bytes  
 100 packets captured  
