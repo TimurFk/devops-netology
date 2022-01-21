@@ -129,6 +129,7 @@ $ bash cert-renew.sh
 https://disk.yandex.ru/i/uDdDJtcjNFfJZw
 
 ***5. Создайте скрипт crontab***  
+**#Делаю скрипт на 17:20, 21 числа месяца**  
 $ crontab –e  
 …  
 20 17 21 * * bash /home/vagrant/ssl/cert-renew.sh  
@@ -138,3 +139,5 @@ $ grep CRON /var/log/syslog
 Jan 21 14:20:01 vagrant CRON[4010]: (vagrant) CMD (bash /home/vagrant/ssl/cert-renew.sh)  
 
 https://disk.yandex.ru/i/Zz5nlfk1QNgA9A   
+
+**#Скрипт сработал по расписанию(UTC +3), сертификат обновился**
