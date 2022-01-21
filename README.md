@@ -1,80 +1,140 @@
 # devops-netology
-Здравствуйте, Фкирдымов Тимур комментарий к заданию 3.9
+Здравствуйте, Фкирдымов Тимур, курсовая работа.
 
-***1.	Установите Bitwarden плагин для браузера. Зарегистрируйтесь и сохраните несколько паролей.***  
-https://disk.yandex.ru/i/ufedPqnSIoXMkQ 
+***1. Устанавливаем и настраиваем ufw***  
+$ sudo ufw status  
+ufw inactive  
+$ sudo ufw default deny incoming  
+$ sudo ufw default allow outgoing  
+$ sudo ufw allow 22  
+Rules updated  
+$ sudo ufw allow 443  
+Rules updated  
+$ sudo ufw enable  
+$ sudo ufw status  
+Status: active  
+….  
 
-***2.	Установите Google authenticator на мобильный телефон. Настройте вход в Bitwarden аккаунт через Google authenticator OTP.***  
-https://disk.yandex.ru/i/HetCYOSMKdCvTg
+Проверяю подключение через ssh – работает.  
 
-***3.	Установите apache2, сгенерируйте самоподписанный сертификат, настройте тестовый сайт для работы по HTTPS.***  
-$ sudo apt update  
-$ sudo apt install apache2  
-$ sudo a2enmod ssl  
-$ sudo systemctl restart apache2  
-$ sudo openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout /etc/ssl/private/apache-selfsigned.key -out /etc/ssl/certs/apache-selfsigned.crt  
-$ sudo nano /etc/apache2/sites-available/192.168.39.35.conf  
-<VirtualHost *:443>  
-   ServerName 192.168.39.35  
-   DocumentRoot /var/www/192.168.39.35
+***2. Установка и выпуск сертификатов с помощью hashicorp vault***  
+# Устанавливаю Vault  
+$ curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add –  
+Ok  
+$ sudo apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"  
+$ sudo apt-get update && sudo apt-get install vault  
+$ sudo vault  
+Usage: vault <command> [args]  
+…  
+$ vault server -dev -dev-root-token-id root   
+$ export VAULT_ADDR=http://127.0.0.1:8200  
+$ export VAULT_TOKEN=root  
+$ vault status  
+Key             Value  
+---             -----  
+Seal Type       shamir  
+Initialized     true  
+Sealed          false  
+Total Shares    1  
+Threshold       1  
+Version         1.9.2  
+Storage Type    inmem  
+Cluster Name    vault-cluster-9caa418c  
+Cluster ID      06b07fcb-d7df-40e6-b262-70f9008b7e19  
+HA Enabled      false  
+# Создаю корневой сертификат  
+$ vault secrets enable pki  
+2022-01-17T12:47:49.002Z [INFO]  core: successful mount: namespace="\"\"" path=pki/ type=pki  
+Success! Enabled the pki secrets engine at: pki/  
+$ vault secrets tune -max-lease-ttl=43800h pki  
+2022-01-17T12:49:11.119Z [INFO]  core: mount tuning of leases successful: path=pki/  
+Success! Tuned the secrets engine at: pki/  
+$ vault write -field=certificate pki/root/generate/internal common_name="devops2021.com" ttl=43800h > CA_cert.crt  
+$ vault write pki/config/urls issuing_certificates="http://127.0.0.1:8200/v1/pki/ca" crl_distribution_points="http://127.0.0.1:8200/v1/pki/crl"  
+Success! Data written to: pki/config/urls  
+# Создаю промежуточный сертификат и определяю роли.  
+$ vault secrets enable -path=pki_int pki  
+2022-01-17T13:10:50.171Z [INFO]  core: successful mount: namespace="\"\"" path=pki_int/ type=pki  
+Success! Enabled the pki secrets engine at: pki_int/  
+$ vault secrets tune -max-lease-ttl=43800h pki_int  
+2022-01-17T13:12:27.581Z [INFO]  core: mount tuning of leases successful: path=pki_int/  
+Success! Tuned the secrets engine at: pki_int/  
+$ sudo apt install jq  
+$ vault write -format=json pki_int/intermediate/generate/internal common_name="devops2021.com Intermediate Authority" | jq -r '.data.csr' > pki_intermediate.csr  
+$ vault write -format=json pki/root/sign-intermediate csr=@pki_intermediate.csr format=pem_bundle ttl="43800h" | jq -r '.data.certificate' > intermediate.cert.pem  
+$ vault write pki_int/intermediate/set-signed certificate=@intermediate.cert.pem  
+Success! Data written to: pki_int/intermediate/set-signed  
+$ vault write pki_int/roles/devops2021-dot-com allowed_domains="devops2021.com" allow_subdomains=true max_ttl="43800h"  
+Success! Data written to: pki_int/roles/devops2021-dot-com  
+# Создаю и выгружаю сертификаты  
+$ vault write pki_int/issue/devops2021-dot-com common_name="dev.devops2021.com" ttl="720h" > dev.devops2021.com.crt  
+# Далее через scp скопипровал и установил созданный корневой сертификат на хост.  
 
-   SSLEngine on  
-   SSLCertificateFile /etc/ssl/certs/apache-selfsigned.crt  
-   SSLCertificateKeyFile /etc/ssl/private/apache-selfsigned.key  
-</VirtualHost>  
-$ sudo mkdir /var/www/192.168.39.35  
-$ sudo nano /var/www/192.168.39.35/index.html  
-#<h1>Rabotaet!!!</h1>  
-$ sudo a2ensite 192.168.39.35.conf  
-$ sudo systemctl reload apache2  
-$ sudo apache2ctl configtest  
-Syntax OK  
-Проверяю в браузере https://192.168.39.35  
-https://disk.yandex.ru/i/_Mj3sMnHgYfomQ  
-https://disk.yandex.ru/i/-waGOqkuyqiF_A  
+***3. Установка и настройка nginx***  
+# прописываю имя для localhost на хосте (win) и на виртуалке  
+$ sudo nano /etc/hosts  
+…  
+127.0.0.1       dev.devops2021.com  
+….  
+# устанавливаю nginx  
+$ sudo apt install nginx  
+$ sudo systemctl status nginx  
+● nginx.service - A high performance web server and a reverse proxy server  
+     Loaded: loaded (/lib/systemd/system/nginx.service; enabled; vendor preset: enabled)  
+     Active: active (running) since Mon 2022-01-17 14:41:45 UTC; 10s ago  
+….  
+# Копирую и подготавливаю сертификаты (key и pem) для nginx и будущего скрипта  
+$ sudo systemctl stop nginx  
+$ mkdir /home/vagrant/ssl  
+$ cat dev.devops2021.com.crt | jq -r .data.certificate > /home/vagrant/ssl/dev.devops2021.com.crt.pem  
+$ cat dev.devops2021.com.crt | jq -r .data.issuing_ca >> /home/vagrant/ssl/dev.devops2021.com.crt.pem  
+$ cat dev.devops2021.com.crt | jq -r .data.private_key > /home/vagrant/ssl/dev.devops2021.com.crt.key  
+# Прописываю настройки https в nginx и закрываю вход по незащищенному 80 порту  
+$ sudo nano /etc/nginx/sites-enabled/default  
+…  
+server {  
+        #listen 80 default_server;  
+        #listen [::]:80 default_server;
 
-***4.	 Проверьте на TLS уязвимости произвольный сайт в интернете (кроме сайтов МВД, ФСБ, МинОбр, НацБанк, РосКосмос, РосАтом, РосНАНО и любых госкомпаний, объектов КИИ, ВПК ... и тому подобное).***  
-$ git clone --depth 1 https://github.com/drwetter/testssl.sh.git  
-$ cd testssl.sh  
-~/testssl.sh$ ./testssl.sh -p --parallel --sneaky https://www.xxpm.ru/
+        # SSL configuration  
+        #  
+        listen 443 ssl default_server;  
+        listen [::]:443 ssl default_server;  
+        ssl_certificate     /home/vagrant/ssl/dev.devops2021.com.crt.pem;  
+        ssl_certificate_key /home/vagrant/ssl/dev.devops2021.com.crt.key;  
+        #  
+…  
+$ sudo systemctl start nginx  
+$ sudo systemctl status nginx  
+nginx.service - A high performance web server and a reverse proxy server  
+     Loaded: loaded (/lib/systemd/system/nginx.service; enabled; vendor preset: enabled)  
+     Active: active (running) since Tue 2022-01-17 18:05:28 UTC; 6s ago  
+….  
+# Проверяю, захожу с хоста на https://dev.devops2021.com  
+https://disk.yandex.ru/i/A6xtR32wImiwhw
 
-Проверял рабочий сайт, поэтому частично замазал  
-https://disk.yandex.ru/i/ICj0hHqb5ub9WA 
+***4. Создание скрипта генерации нового сертификата (сертификат сервера ngnix должен быть "зеленым").***  
+$ nano /home/vagrant/ssl/cert-renew.sh  
+#!/bin/bash  
 
-***5.	Установите на Ubuntu ssh сервер, сгенерируйте новый приватный ключ. Скопируйте свой публичный ключ на другой сервер. Подключитесь к серверу по SSH-ключу.***  
-$ hostname  
-vagrant  
-$ sudo apt install openssh-server  
-$ sudo systemctl start sshd.service  
-$ ssh-keygen  
-#Копирую ключ на вторую машину  
-$ ssh-copy-id vagrant@192.168.39.34                     		
-Number of key(s) added: 1
+vault write -format=json pki_int/issue/devops2021-dot-com common_name="dev.devops2021.com" ttl="720h" > /home/vagrant/ssl/dev.devops2021.com.crt  
+cat /home/vagrant//ssl/dev.devops2021.com.crt | jq -r .data.certificate > /home/vagrant/ssl/dev.devops2021.com.crt.pem  
+cat /home/vagrant/ssl/dev.devops2021.com.crt | jq -r .data.issuing_ca >> /home/vagrant/ssl/dev.devops2021.com.crt.pem  
+cat /home/vagrant/ssl/dev.devops2021.com.crt | jq -r .data.private_key > /home/vagrant/ssl/dev.devops2021.com.crt.key  
+sudo systemctl reload nginx  
 
-Now try logging into the machine, with:   "ssh 'vagrant@192.168.39.34'"  
-#Подключаюсь ко второй машине  
-$ ssh vagrant@192.168.39.34  					
-Подключение прошло успешно - https://disk.yandex.ru/i/frwizDi6aLlaLQ 
+$ chmod +x cert-renew.sh  
+$ bash cert-renew.sh  
+# Проверяю, скрипт работает
+https://disk.yandex.ru/i/uDdDJtcjNFfJZw
 
-***6.	Переименуйте файлы ключей из задания 5. Настройте файл конфигурации SSH клиента, так чтобы вход на удаленный сервер осуществлялся по имени сервера.***  
-~$ cd /home/vagrant/.ssh  
-~/.ssh$ ls  
-authorized_keys  id_rsa  id_rsa.pub  known_hosts  
-~/.ssh$ mv id_rsa second_rsa  
-~/.ssh$ mv id_rsa.pub second_rsa.pub  
-~/.ssh$ nano config  
-Host vagrant2  
-User vagrant  
-Hostname 192.168.39.34  
-IdentityFile ~/.ssh/second_rsa  
-$ ssh vagrant@vagrant2  
-Подключение прошло успешно - https://disk.yandex.ru/i/dCKK9r_kN3BQbg
+***5. Создайте скрипт crontab***  
+$ crontab –e  
+…  
+20 17 21 * * bash /home/vagrant/ssl/cert-renew.sh  
 
-***7.	Соберите дамп трафика утилитой tcpdump в формате pcap, 100 пакетов. Откройте файл pcap в Wireshark.***  
-$ tcpdump -i eth0 -c 100 -w 1601.pcap  
-tcpdump: listening on eth0, link-type EN10MB (Ethernet), capture size 262144 bytes  
-100 packets captured  
-102 packets received by filter  
-0 packets dropped by kernelpcap
+#Проверяю выполнение скрипта  
+$ grep CRON /var/log/syslog  
+Jan 21 14:20:01 vagrant CRON[4010]: (vagrant) CMD (bash /home/vagrant/ssl/cert-renew.sh)  
 
-Открыл в Wireshark - https://disk.yandex.ru/d/whfWfIFCl_tcKg 
+https://disk.yandex.ru/i/Zz5nlfk1QNgA9A   
