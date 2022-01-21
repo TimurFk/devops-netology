@@ -18,7 +18,7 @@ Status: active
 Проверяю подключение через ssh – работает.  
 
 ***2. Установка и выпуск сертификатов с помощью hashicorp vault***  
-# Устанавливаю Vault  
+#Устанавливаю Vault  
 $ curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add –  
 Ok  
 $ sudo apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"  
@@ -42,7 +42,7 @@ Storage Type    inmem
 Cluster Name    vault-cluster-9caa418c  
 Cluster ID      06b07fcb-d7df-40e6-b262-70f9008b7e19  
 HA Enabled      false  
-# Создаю корневой сертификат  
+#Создаю корневой сертификат  
 $ vault secrets enable pki  
 2022-01-17T12:47:49.002Z [INFO]  core: successful mount: namespace="\"\"" path=pki/ type=pki  
 Success! Enabled the pki secrets engine at: pki/  
@@ -52,7 +52,7 @@ Success! Tuned the secrets engine at: pki/
 $ vault write -field=certificate pki/root/generate/internal common_name="devops2021.com" ttl=43800h > CA_cert.crt  
 $ vault write pki/config/urls issuing_certificates="http://127.0.0.1:8200/v1/pki/ca" crl_distribution_points="http://127.0.0.1:8200/v1/pki/crl"  
 Success! Data written to: pki/config/urls  
-# Создаю промежуточный сертификат и определяю роли.  
+#Создаю промежуточный сертификат и определяю роли.  
 $ vault secrets enable -path=pki_int pki  
 2022-01-17T13:10:50.171Z [INFO]  core: successful mount: namespace="\"\"" path=pki_int/ type=pki  
 Success! Enabled the pki secrets engine at: pki_int/  
@@ -66,30 +66,30 @@ $ vault write pki_int/intermediate/set-signed certificate=@intermediate.cert.pem
 Success! Data written to: pki_int/intermediate/set-signed  
 $ vault write pki_int/roles/devops2021-dot-com allowed_domains="devops2021.com" allow_subdomains=true max_ttl="43800h"  
 Success! Data written to: pki_int/roles/devops2021-dot-com  
-# Создаю и выгружаю сертификаты  
+#Создаю и выгружаю сертификаты  
 $ vault write pki_int/issue/devops2021-dot-com common_name="dev.devops2021.com" ttl="720h" > dev.devops2021.com.crt  
-# Далее через scp скопипровал и установил созданный корневой сертификат на хост.  
+#Далее через scp скопипровал и установил созданный корневой сертификат на хост.  
 
 ***3. Установка и настройка nginx***  
-# прописываю имя для localhost на хосте (win) и на виртуалке  
+#прописываю имя для localhost на хосте (win) и на виртуалке  
 $ sudo nano /etc/hosts  
 …  
 127.0.0.1       dev.devops2021.com  
 ….  
-# устанавливаю nginx  
+#устанавливаю nginx  
 $ sudo apt install nginx  
 $ sudo systemctl status nginx  
 ● nginx.service - A high performance web server and a reverse proxy server  
      Loaded: loaded (/lib/systemd/system/nginx.service; enabled; vendor preset: enabled)  
      Active: active (running) since Mon 2022-01-17 14:41:45 UTC; 10s ago  
 ….  
-# Копирую и подготавливаю сертификаты (key и pem) для nginx и будущего скрипта  
+#Копирую и подготавливаю сертификаты (key и pem) для nginx и будущего скрипта  
 $ sudo systemctl stop nginx  
 $ mkdir /home/vagrant/ssl  
 $ cat dev.devops2021.com.crt | jq -r .data.certificate > /home/vagrant/ssl/dev.devops2021.com.crt.pem  
 $ cat dev.devops2021.com.crt | jq -r .data.issuing_ca >> /home/vagrant/ssl/dev.devops2021.com.crt.pem  
 $ cat dev.devops2021.com.crt | jq -r .data.private_key > /home/vagrant/ssl/dev.devops2021.com.crt.key  
-# Прописываю настройки https в nginx и закрываю вход по незащищенному 80 порту  
+#Прописываю настройки https в nginx и закрываю вход по незащищенному 80 порту  
 $ sudo nano /etc/nginx/sites-enabled/default  
 …  
 server {  
@@ -110,7 +110,7 @@ nginx.service - A high performance web server and a reverse proxy server
      Loaded: loaded (/lib/systemd/system/nginx.service; enabled; vendor preset: enabled)  
      Active: active (running) since Tue 2022-01-17 18:05:28 UTC; 6s ago  
 ….  
-# Проверяю, захожу с хоста на https://dev.devops2021.com  
+#Проверяю, захожу с хоста на https://dev.devops2021.com  
 https://disk.yandex.ru/i/A6xtR32wImiwhw
 
 ***4. Создание скрипта генерации нового сертификата (сертификат сервера ngnix должен быть "зеленым").***  
@@ -125,7 +125,7 @@ sudo systemctl reload nginx
 
 $ chmod +x cert-renew.sh  
 $ bash cert-renew.sh  
-# Проверяю, скрипт работает
+#Проверяю, скрипт работает
 https://disk.yandex.ru/i/uDdDJtcjNFfJZw
 
 ***5. Создайте скрипт crontab***  
