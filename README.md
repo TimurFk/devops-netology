@@ -1,143 +1,55 @@
 # devops-netology
-Здравствуйте, Фкирдымов Тимур, курсовая работа.
+Здравствуйте, Фкирдымов Тимур, работа 5.1.
 
-***1. Устанавливаем и настраиваем ufw***  
-$ sudo ufw status  
-ufw inactive  
-$ sudo ufw default deny incoming  
-$ sudo ufw default allow outgoing  
-$ sudo ufw allow 22  
-Rules updated  
-$ sudo ufw allow 443  
-Rules updated  
-$ sudo ufw enable  
-$ sudo ufw status  
-Status: active  
-….  
+**1. Опишите кратко, как вы поняли: в чем основное отличие полной (аппаратной) виртуализации, паравиртуализации и виртуализации на основе ОС.**
 
-**#Проверяю подключение через ssh – работает.**  
+Полная виртуализация – гипервизор ставится сразу на сервер (железо), имеет прямой доступ к аппаратным средствам. Плюсы – не надо никаких прослоек в виде установки ОС, быстродействие, при наличии совместимого оборудования – быстрая развертка. Минусы, по моему мнению – высокие требования по совместимости оборудования, если оно не в списке, требуется ручная интеграция или замена (как пример из опыта – необходимость железного raid для ESXi, проблемы с простыми сетевыми контроллерами).
 
-***2. Установка и выпуск сертификатов с помощью hashicorp vault***  
-**#Устанавливаю Vault**  
-$ curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add –  
-Ok  
-$ sudo apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"  
-$ sudo apt-get update && sudo apt-get install vault  
-$ sudo vault  
-Usage: vault <command> [args]  
-…  
-$ vault server -dev -dev-root-token-id root   
-$ export VAULT_ADDR=http://127.0.0.1:8200  
-$ export VAULT_TOKEN=root  
-$ vault status  
-Key             Value  
----             -----  
-Seal Type       shamir  
-Initialized     true  
-Sealed          false  
-Total Shares    1  
-Threshold       1  
-Version         1.9.2  
-Storage Type    inmem  
-Cluster Name    vault-cluster-9caa418c  
-Cluster ID      06b07fcb-d7df-40e6-b262-70f9008b7e19  
-HA Enabled      false  
-**#Создаю корневой сертификат**  
-$ vault secrets enable pki  
-2022-01-17T12:47:49.002Z [INFO]  core: successful mount: namespace="\"\"" path=pki/ type=pki  
-Success! Enabled the pki secrets engine at: pki/  
-$ vault secrets tune -max-lease-ttl=43800h pki  
-2022-01-17T12:49:11.119Z [INFO]  core: mount tuning of leases successful: path=pki/  
-Success! Tuned the secrets engine at: pki/  
-$ vault write -field=certificate pki/root/generate/internal common_name="devops2021.com" ttl=43800h > CA_cert.crt  
-$ vault write pki/config/urls issuing_certificates="http://127.0.0.1:8200/v1/pki/ca" crl_distribution_points="http://127.0.0.1:8200/v1/pki/crl"  
-Success! Data written to: pki/config/urls  
-**#Создаю промежуточный сертификат и определяю роли.**  
-$ vault secrets enable -path=pki_int pki  
-2022-01-17T13:10:50.171Z [INFO]  core: successful mount: namespace="\"\"" path=pki_int/ type=pki  
-Success! Enabled the pki secrets engine at: pki_int/  
-$ vault secrets tune -max-lease-ttl=43800h pki_int  
-2022-01-17T13:12:27.581Z [INFO]  core: mount tuning of leases successful: path=pki_int/  
-Success! Tuned the secrets engine at: pki_int/  
-$ sudo apt install jq  
-$ vault write -format=json pki_int/intermediate/generate/internal common_name="devops2021.com Intermediate Authority" | jq -r '.data.csr' > pki_intermediate.csr  
-$ vault write -format=json pki/root/sign-intermediate csr=@pki_intermediate.csr format=pem_bundle ttl="43800h" | jq -r '.data.certificate' > intermediate.cert.pem  
-$ vault write pki_int/intermediate/set-signed certificate=@intermediate.cert.pem  
-Success! Data written to: pki_int/intermediate/set-signed  
-$ vault write pki_int/roles/devops2021-dot-com allowed_domains="devops2021.com" allow_subdomains=true max_ttl="43800h"  
-Success! Data written to: pki_int/roles/devops2021-dot-com  
-**#Создаю и выгружаю сертификаты**  
-$ vault write pki_int/issue/devops2021-dot-com common_name="dev.devops2021.com" ttl="720h" > dev.devops2021.com.crt  
-**#Далее через scp скопипровал и установил созданный корневой сертификат на хост.**  
+Паравиртуализация – сначала на сервер ставится ОС, потом на ОС устанавливается гипервизор и работает как процесс.  
+Плюсы – простая установка, поддержка железа зависит от наличия драйверов для ОС.  
+Минусы – разделение ресурсов с ОС, в случае ошибок в ОС возможны проблемы в работе гипервизора.
 
-***3. Установка и настройка nginx***  
-**#Прописываю имя для localhost на хосте (win) и на виртуалке**  
-$ sudo nano /etc/hosts  
-…  
-127.0.0.1       dev.devops2021.com  
-….  
-**#Устанавливаю nginx**  
-$ sudo apt install nginx  
-$ sudo systemctl status nginx  
-● nginx.service - A high performance web server and a reverse proxy server  
-     Loaded: loaded (/lib/systemd/system/nginx.service; enabled; vendor preset: enabled)  
-     Active: active (running) since Mon 2022-01-17 14:41:45 UTC; 10s ago  
-….  
-**#Копирую и подготавливаю сертификаты (key и pem) для nginx и будущего скрипта**  
-$ sudo systemctl stop nginx  
-$ mkdir /home/vagrant/ssl  
-$ cat dev.devops2021.com.crt | jq -r .data.certificate > /home/vagrant/ssl/dev.devops2021.com.crt.pem  
-$ cat dev.devops2021.com.crt | jq -r .data.issuing_ca >> /home/vagrant/ssl/dev.devops2021.com.crt.pem  
-$ cat dev.devops2021.com.crt | jq -r .data.private_key > /home/vagrant/ssl/dev.devops2021.com.crt.key  
-**#Прописываю настройки https в nginx и закрываю вход по незащищенному 80 порту**  
-$ sudo nano /etc/nginx/sites-enabled/default  
-…  
-server {  
-        #listen 80 default_server;  
-        #listen [::]:80 default_server;
+Виртуализация на уровне ОС – нет прослойки в виде гипервизора между ОС и виртуальными машинами, ресурсы для виртуальных машин распределяет сама ОС.  
+Плюсы – работа напрямую с железом и высокая производительность. Высокая плотность.  
+Минусы – ограничение использования ОС от хостовой.
 
-        # SSL configuration  
-        #  
-        listen 443 ssl default_server;  
-        listen [::]:443 ssl default_server;  
-        ssl_certificate     /home/vagrant/ssl/dev.devops2021.com.crt.pem;  
-        ssl_certificate_key /home/vagrant/ssl/dev.devops2021.com.crt.key;  
-        #  
-…  
-$ sudo systemctl start nginx  
-$ sudo systemctl status nginx  
-nginx.service - A high performance web server and a reverse proxy server  
-     Loaded: loaded (/lib/systemd/system/nginx.service; enabled; vendor preset: enabled)  
-     Active: active (running) since Tue 2022-01-17 18:05:28 UTC; 6s ago  
-….  
-**#Проверяю, захожу с хоста на https://dev.devops2021.com**  
-https://disk.yandex.ru/i/A6xtR32wImiwhw
 
-***4. Создание скрипта генерации нового сертификата (сертификат сервера ngnix должен быть "зеленым").***  
-$ nano /home/vagrant/ssl/cert-renew.sh  
-#!/bin/bash  
+**2. Выберите один из вариантов использования организации физических серверов, в зависимости от условий использования.**
+	**Высоконагруженная база данных, чувствительная к отказу** – основная нагрузка в данном варианте приходится на жесткие (ssd) диски. Поэтому основным моментом, я бы отметил использование хорошего raid контроллера с правильно выбранным уровнем Raid, а также быстрых и надежных 	дисков. Это обеспечит нам и скорость и надежность. При таком варианте честного говоря выбрал бы полную виртуализацию. Т.к. такого варианта нет, то выберу всетаки физическую машину.  
+	Различные web-приложения – считаю оптимальным вариантом виртуализацию на уровне ОС, за счёт 	своей масштабируемости и хорошей плотности, хорошим распределением ресурсов.
+	Windows системы для использования бухгалтерским отделом - точно паравиртуализация на Hyper-V, 	если есть деньги на лицензии. По опыту беспроблемная связка с хорошей поддержкой, если конечно 	не огромный масштаб.
+	Системы, выполняющие высокопроизводительные расчеты на GPU – с этим направлением не 	знаком, из того, что прочел – если используются GPU nVidia, то наверное виртуализация на уровне ОС, 	с помощью обычных или nVidia NGC контейнеров, с оптимизированными версиями различного софта, 	библиотек и драйверов
 
-vault write -format=json pki_int/issue/devops2021-dot-com common_name="dev.devops2021.com" ttl="720h" > /home/vagrant/ssl/dev.devops2021.com.crt  
-cat /home/vagrant//ssl/dev.devops2021.com.crt | jq -r .data.certificate > /home/vagrant/ssl/dev.devops2021.com.crt.pem  
-cat /home/vagrant/ssl/dev.devops2021.com.crt | jq -r .data.issuing_ca >> /home/vagrant/ssl/dev.devops2021.com.crt.pem  
-cat /home/vagrant/ssl/dev.devops2021.com.crt | jq -r .data.private_key > /home/vagrant/ssl/dev.devops2021.com.crt.key  
-sudo systemctl reload nginx  
+**3. Выберите подходящую систему управления виртуализацией для предложенного сценария. Детально опишите ваш выбор.**
 
-$ chmod +x cert-renew.sh  
-$ bash cert-renew.sh  
-**#Проверяю, скрипт работает**  
-https://disk.yandex.ru/i/uDdDJtcjNFfJZw
+***a) 100 виртуальных машин на базе Linux и Windows, общие задачи, нет особых требований. Преимущественно Windows based инфраструктура, требуется реализация программных балансировщиков нагрузки, репликации данных и автоматизированного механизма создания резервных копий.***  
+Паравиртуализация с Hyper-V. Оптимальная работа с Windows машинам (репликация, миграция, бэкапы через Veeam или похожего), есть поддержка основных дистрибьютивов Linux. Масштабируемость Hyper-V позволяет запустить 100 машин.   
+***b) Требуется наиболее производительное бесплатное open source решение для виртуализации небольшой (20-30 серверов) инфраструктуры на базе Linux и Windows виртуальных машин.***
+По ТЗ, выбрал бы Xen, после прослушанной лекции. За счёт универсальности, стабильности и поддержки Windows и open source. Как вариант, рассмотрел бы VmWare Esxi, под ТЗ подходит, вопрос только с бэкапами, это будет ясно после понимания, для чего будут использоваться VM.
 
-***5. Создайте скрипт crontab***  
-**#Делаю скрипт на 17:20, 21 числа месяца**  
-$ crontab –e  
-…  
-20 17 21 * * bash /home/vagrant/ssl/cert-renew.sh  
+***c) Необходимо бесплатное, максимально совместимое и производительное решение для виртуализации Windows инфраструктуры.***
 
-**#Проверяю выполнение скрипта**  
-$ grep CRON /var/log/syslog  
-Jan 21 14:20:01 vagrant CRON[4010]: (vagrant) CMD (bash /home/vagrant/ssl/cert-renew.sh)  
+Честно говоря, «бесплатно» и «Windows инфраструктура» не совсем понятно, как сочетаются :)  
+Если мы рассматриваем, что лицензии у нас куплены каким-то чудным образом, то наверное Hyper-V в варианте полной виртуализации (можно использовать бесплатно). Подходит под вводное ТЗ по всем параметрам.
 
-https://disk.yandex.ru/i/Zz5nlfk1QNgA9A   
+***d) Необходимо рабочее окружение для тестирования программного продукта на нескольких дистрибутивах Linux.***
 
-**#Скрипт сработал по расписанию(UTC +3), сертификат обновился**
+Выбрал бы VirtualBox, возможно с Vagrant для быстрой развертки, если хост Windows.  
+Выбрал бы KVM, если хост Linux.  
+Оба обеспечивают поддержку разнообразных систем и удобны в использовании.
+
+
+**4. Опишите возможные проблемы и недостатки гетерогенной среды виртуализации (использования нескольких систем управления виртуализацией одновременно) и что необходимо сделать для минимизации этих рисков и проблем. Если бы у вас был выбор, то создавали бы вы гетерогенную среду или нет? Мотивируйте ваш ответ примерами.**
+	Недостатки:  
+	- вероятная невозможность автоматизировать процессы одинаково для разных систем  
+	- определенные требования для оборудования под разные версии сред виртуализации  
+	- отсутствие возможности мгновенного переключения в случае отказов или необходимость держать всё в двойном объеме для реализации этой функции  
+	- необходимость в разнообразном ПО для работы с разными средами  
+	- необходимость в дополнительных затратах, если это два разных коммерческих продукта (нет скидок, как при покупке одного продукта в большем количестве)   
+	- необходимость поддержки двух разных систем, что требует профильных специалистов для разных систем или содержание большего числа сотрудников.  
+	Как минимизировать:  
+	- на этапе планирования проанализировать, какие ОС необходимы для текущих и будущих задач, попытаться выбрать одно универсальное решение из систем виртуализации (если это возможно)   
+	- если не получается использовать универсальное решение, то выбирать ПО для обслуживания и автоматизации с учетом поддержки используемых систем виртуализации  
+	- также выбирать железо, совместимое с обоими виртуальными системами, в случай возможной миграции на одну из них  
+	-  нанимать сотрудников с большим опытом работы в обеих системах  
+	Если бы был выбор, я конечно бы использовал одну систему виртуализации, таким образом упростив настройку, обслуживание и автоматизацию. При этом увеличив отказоустойчивость. Сократил бы затраты (или пустил бы эти средства на улучшение). Но это в текущих реалиях и динамично меняющихся задачах это вряд ли возможно.
