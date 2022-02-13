@@ -24,10 +24,10 @@
 > "server1.netology" {000c7d6a-3340-4421-bc07-7f2cf6629934}
 
 #Проверяем работу Vagrant  
-> $vagrant global-status  
-> id       name             provider   state   directory  
-> ---------------------------------------------------------------------------------  
-> b680cfe  server1.netology virtualbox running D:/virtbox/Ubuntu  
+>$vagrant global-status  
+>id       name             provider   state   directory  
+>---------------------------------------------------------------------------------  
+>b680cfe  server1.netology virtualbox running D:/virtbox/Ubuntu  
 
 #Проверяем Ansible  
 > $ ansible –version  
