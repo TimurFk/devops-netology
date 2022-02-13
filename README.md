@@ -19,24 +19,24 @@
 ***Задача 3. Установить на личный компьютер: VirtualBox, Vagrant, Ansible***
 
 #Virtual Box уже установлен, проверяю.  
-> cd C:\Program Files\Oracle\VirtualBox  
-> VBoxManage.exe list vms  
-"server1.netology" {000c7d6a-3340-4421-bc07-7f2cf6629934}
+> $cd C:\Program Files\Oracle\VirtualBox  
+> $VBoxManage.exe list vms  
+> "server1.netology" {000c7d6a-3340-4421-bc07-7f2cf6629934}
 
 #Проверяем работу Vagrant  
->vagrant global-status  
-id       name             provider   state   directory  
----------------------------------------------------------------------------------  
-b680cfe  server1.netology virtualbox running D:/virtbox/Ubuntu  
+> $vagrant global-status  
+> id       name             provider   state   directory  
+> ---------------------------------------------------------------------------------  
+> b680cfe  server1.netology virtualbox running D:/virtbox/Ubuntu  
 
 #Проверяем Ansible  
-$ ansible –version  
-ansible 2.9.6  
-  config file = /etc/ansible/ansible.cfg  
-  configured module search path = ['/home/vagrant/.ansible/plugins/modules', '/usr/share/ansible/plugins/modules']  
-  ansible python module location = /usr/lib/python3/dist-packages/ansible  
-  executable location = /usr/bin/ansible  
-  python version = 3.8.10 (default, Jun  2 2021, 10:49:15) [GCC 9.4.0]
+> $ ansible –version  
+> ansible 2.9.6  
+>  config file = /etc/ansible/ansible.cfg  
+>  configured module search path = ['/home/vagrant/.ansible/plugins/modules', '/usr/share/ansible/plugins/modules']  
+>  ansible python module location = /usr/lib/python3/dist-packages/ansible  
+>  executable location = /usr/bin/ansible  
+>  python version = 3.8.10 (default, Jun  2 2021, 10:49:15) [GCC 9.4.0]
 
 
 
