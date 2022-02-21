@@ -31,11 +31,11 @@ https://hub.docker.com/r/timfk/nginx/f.1.01
 >sh-4.4# cat /data-in-container/test.md  
 >It's work!  
 >$ docker exec -it 6c51f9d270a8 /bin/sh  
->> cd data-in-container  
->> ls –l  
+>`#cd data-in-container  
+>`#ls –l  
 >total 4  
 >-rw-r--r-- 1 root root 11 Feb 21 10:20 test.md  
->>cat test.md  
+>`#cat test.md  
 >It's work!
 
 
