@@ -17,25 +17,25 @@ https://hub.docker.com/r/timfk/nginx/f.1.01
 8) Gitlab сервер для реализации CI/CD процессов и приватный (закрытый) Docker Registry – тут надо смотреть от количества пользователей, при малом количестве, думаю возможно использовать Docker. Если пользователей предполагается много, то требования Gitlab (8 ядер) делают использование контейнеризации бессмысленным.  
 
 ***3. Подключитесь во второй контейнер и отобразите листинг и содержание файлов в /data контейнера.***  
->$ docker run -it -v /local-data:/data-in-container -d timfk/centos:5.3.3
->$ docker run -it -v /local-data:/data-in-container -d debian
->$ docker ps
->CONTAINER ID   IMAGE                COMMAND       CREATED          STATUS          PORTS     NAMES
->6c51f9d270a8   debian               	"bash"        	26 seconds ago   Up 25 seconds             pedantic_mclean
->72dc040a402d   timfk/centos:5.3.3   "/bin/bash"   32 seconds ago   Up 32 seconds             wizardly_moser
->$ docker exec -it 72dc040a402d /bin/sh
->sh-4.4# ls
->bin                dev  home  lib64       media  opt   root  sbin  sys  usr
->data-in-container  etc  lib   lost+found  mnt    proc  run   srv   tmp  var
->sh-4.4# echo "It's work!" > /data-in-container/test.md
->sh-4.4# cat /data-in-container/test.md
->It's work!
->$ docker exec -it 6c51f9d270a8 /bin/sh
-># cd data-in-container
-># ls –l
->total 4
->-rw-r--r-- 1 root root 11 Feb 21 10:20 test.md
-># cat test.md
+>$ docker run -it -v /local-data:/data-in-container -d timfk/centos:5.3.3  
+>$ docker run -it -v /local-data:/data-in-container -d debian  
+>$ docker ps  
+>CONTAINER ID   IMAGE                COMMAND       CREATED          STATUS          PORTS     NAMES  
+>6c51f9d270a8   debian               	"bash"        	26 seconds ago   Up 25 seconds             pedantic_mclean  
+>72dc040a402d   timfk/centos:5.3.3   "/bin/bash"   32 seconds ago   Up 32 seconds             wizardly_moser  
+>$ docker exec -it 72dc040a402d /bin/sh  
+>sh-4.4# ls  
+>bin                dev  home  lib64       media  opt   root  sbin  sys  usr  
+>data-in-container  etc  lib   lost+found  mnt    proc  run   srv   tmp  var  
+>sh-4.4# echo "It's work!" > /data-in-container/test.md  
+>sh-4.4# cat /data-in-container/test.md  
+>It's work!  
+>$ docker exec -it 6c51f9d270a8 /bin/sh  
+> # cd data-in-container  
+> # ls –l  
+>total 4  
+>-rw-r--r-- 1 root root 11 Feb 21 10:20 test.md  
+> # cat test.md  
 >It's work!
 
 
